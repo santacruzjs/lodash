@@ -8,7 +8,7 @@ import _ from 'lodash';
 import autoMakers from './cars';
 
 (function() {
-	var choices, results = {}, options = {}, scenarios = [];
+	var choices = {}, results = {}, options = {}, scenarios = [];
 
 	const filters = {
 		makers: {
@@ -99,24 +99,39 @@ import autoMakers from './cars';
 	 *   2. Create numbered pop-ups, along with sub counts for models searched within
 	 * */
 	scenarios.push(function() {
-		const inputTemplate = {id: '', year: 2014};
-		results = _.memoize((val) => {
-			console.log("Caching input...");
-			const autoMakerId = parseInt(val.id);
-			const models = options[autoMakerId].models;
+		const YEAR = 2015;
+		// const inputTemplate = {id: '', year: 2014};
+
+
+		results = _.memoize((autoMakerId) => {
+			// const autoMakerId = parseInt(id);
+			const autoMaker = options[autoMakerId];
+			const models = autoMaker.models;
 			const status = _.some(models, (model) =>
-				model.years.find((year) => year.year < val.year) ? true : false);
-			return !status ? false : true;
+				model.years.find((year) => year.year < YEAR) ? true : false);
+
+			console.log("Caching for: ", autoMaker.name);
+			choices[autoMakerId] = true;
+			const cachedHtml = _.reduce(choices, (html, choice, key) => {
+				if (choice) {
+					html += `<li class="list-group-item"><b>${options[key].name}</b> cached...</li>`;
+				}
+
+				return html;
+			}, '');
+
+
+			$('#chapters').html('<ul class="list-group">' +cachedHtml +'</ul>');
+			return status;
 		});
 
 		$('nav #makers .dropdown-menu').on('click', (e) => {
 			const autoMakerId = e.target.dataset.id;
 			const autoMaker = options[autoMakerId];
-			const input = Object.assign(inputTemplate, {id: autoMakerId});
-			const status = results(input);
+			const status = results(autoMakerId);
 			const state = status ? 'was' : 'not';
 			const html = '<div class="well well-lg lead">'
-				+`	${autoMaker.name} <b>${state}</b> made before ${inputTemplate.year}`
+				+`	${autoMaker.name} <b>${state}</b> made before ${YEAR}`
 				+'</div>';
 
 			$('#content').html(html);
