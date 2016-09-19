@@ -8,7 +8,7 @@ import _ from 'lodash';
 import autoMakers from './cars';
 
 (function() {
-	var choices, results = {}, scenarios = [];
+	var choices, results = {}, options = {}, scenarios = [];
 
 	const filters = {
 		makers: {
@@ -24,7 +24,10 @@ import autoMakers from './cars';
 
 // Build baseline navigation menu w/ Drop down of scenarios to run
 	$(document).ready(function() {
-		scenarios.forEach(scenario => scenario());
+		// scenarios.forEach(scenario => scenario());
+		scenarios[0]();
+		// scenario[1]();
+		scenarios[2]();
 	});
 
 
@@ -34,9 +37,6 @@ import autoMakers from './cars';
 	 * 	2. Build a drop-down menu of vehicle makes
 	 */
 	scenarios.push(function() {
-
-		var options = {};
-
 		// mapValues
 		options = _.mapKeys(autoMakers, (maker) => maker.id);
 		results = _.mapValues(options, (maker) => false);
@@ -99,24 +99,27 @@ import autoMakers from './cars';
 	 *   2. Create numbered pop-ups, along with sub counts for models searched within
 	 * */
 	scenarios.push(function() {
+		const inputTemplate = {id: '', year: 2014};
+		results = _.memoize((val) => {
+			console.log("Caching input...");
+			const autoMakerId = parseInt(val.id);
+			const models = options[autoMakerId].models;
+			const status = _.some(models, (model) =>
+				model.years.find((year) => year.year < val.year) ? true : false);
+			return !status ? false : true;
+		});
+
 		$('nav #makers .dropdown-menu').on('click', (e) => {
-			results = _.memoize((val) => {
-				autoMakers.find()
-			})
+			const autoMakerId = e.target.dataset.id;
+			const autoMaker = options[autoMakerId];
+			const input = Object.assign(inputTemplate, {id: autoMakerId});
+			const status = results(input);
+			const state = status ? 'was' : 'not';
+			const html = '<div class="well well-lg lead">'
+				+`	${autoMaker.name} <b>${state}</b> made before ${inputTemplate.year}`
+				+'</div>';
 
-
-			if (foundMaker) {
-				content = '<div class="thumbnail">'
-					+`<center><h2>${foundMaker.name}</h2></center>`
-					+'<div class="caption">'
-					+'<h3>Thumbnail label</h3>'
-					+'</div>'
-					+'</div>'
-			} else {
-				content = `<div class="well well-lg">Nothing Found for: ${id}</div>`
-			}
-
-			$('#content').html(content);
+			$('#content').html(html);
 		});
 	});
 })();
