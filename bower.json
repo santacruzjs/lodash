@@ -1,0 +1,21 @@
+{
+  "name": "lodash-for-cars",
+  "description": "Various applications of Lodash based on given collection of car makers",
+  "main": "./src/js/app.js",
+  "authors": [
+    "albert w. chang"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jQuery": "^3.1.0",
+    "bootstrap": "^3.3.7"
+  }
+}

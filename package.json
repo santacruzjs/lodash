@@ -1,0 +1,24 @@
+{
+  "name": "Lodash-for-Cars",
+  "version": "0.1.0",
+  "description": "Various applications of Lodash based on given collection of car makers",
+  "main": "./src/js/app.js",
+  "scripts": {
+    "dev": "webpack-dev-server --colors --hot --content-base public",
+    "build": "rm public/dist/; NODE_ENV=prod webpack --progress --colors"
+  },
+  "author": "albert w. chang",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.1.2",
+    "babel-loader": "^6.0.1",
+    "webpack": "^1.12.3",
+    "webpack-dev-server": "^1.12.1"
+  },
+  "dependencies": {
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-react": "^6.11.1",
+    "jquery": "^3.1.0",
+    "lodash": "^3.10.1"
+  }
+}
