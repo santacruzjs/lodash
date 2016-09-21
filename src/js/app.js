@@ -27,7 +27,8 @@ import autoMakers from './cars';
 		// scenarios.forEach(scenario => scenario());
 		scenarios[0]();
 		// scenario[1]();
-		scenarios[2]();
+		// scenarios[2]();
+		scenarios[4]();
 	});
 
 
@@ -48,9 +49,11 @@ import autoMakers from './cars';
 		}
 
 
-		_.each(options, maker => $('#app .dropdown-menu').append(
-			`<li><a href="#" data-id=${maker.id}>${maker.name}</a></li>`)
-		);
+		_.each(options, maker => {
+			$('#app .dropdown-menu').append(
+				`<li><a href="#" data-id=${maker.id}>${maker.name}</a></li>`
+			);
+		});
 	});
 
 	/* _.find vs. [array].find vs. _.filter
@@ -60,7 +63,7 @@ import autoMakers from './cars';
 	 *  	1. Run utility to find the match within origin cars list
 	 *   2. Add pop-ups that show all iterations being performed before result is found.
 	 * */
-	scenarios.push(function() {
+	const findFilter = function() {
 		$('nav #makers .dropdown-menu').on('click', (e) => {
 			let content = '';
 			const targetId = parseInt(e.target.dataset.id);
@@ -70,9 +73,9 @@ import autoMakers from './cars';
 			// const foundMaker = autoMakers.filter(maker => (maker.id === targetId));
 			/*******************************************************************************
 
-											Add alerts of operation count to right pane of web app
+			 Add alerts of operation count to right pane of web app
 
-			*******************************************************************************/
+			 *******************************************************************************/
 			// Hash - Object
 			// const foundMaker = choices[targetId];
 
@@ -89,7 +92,9 @@ import autoMakers from './cars';
 
 			$('#content').html(content);
 		});
-	});
+	};
+
+	scenarios.push(findFilter);
 
 	/* _.memoize vs. {object} key-value pair caching
 	 * SCENARIO: Allow user to see whether a maker has a model in a particular year
@@ -98,10 +103,9 @@ import autoMakers from './cars';
 	 *   1. Add 'year' entry to last car maker index
 	 *   2. Create numbered pop-ups, along with sub counts for models searched within
 	 * */
-	scenarios.push(function() {
-		const YEAR = 2015;
+	const memoize = function() {
+		const YEAR = 2016 - 1000;
 		// const inputTemplate = {id: '', year: 2014};
-
 
 		results = _.memoize((autoMakerId) => {
 			// const autoMakerId = parseInt(id);
@@ -122,44 +126,113 @@ import autoMakers from './cars';
 
 
 			$('#chapters').html('<ul class="list-group">' +cachedHtml +'</ul>');
-			return status;
-		});
+				return status;
+			});
 
+			$('nav #makers .dropdown-menu').on('click', (e) => {
+				const autoMakerId = e.target.dataset.id;
+				const autoMaker = options[autoMakerId];
+				// let start, end;
+				// let oldConsoleTime = console.time;
+				// console.time = function() {
+				// 	start = arguments;
+				// 	oldConsoleTime.apply(console, arguments);
+				// };
+				//
+				// let oldConsoleTimeEnd = console.timeEnd;
+				// console.timeEnd = function() {
+				// 	end = arguments;
+				// 	oldConsoleTimeEnd.apply(console, arguments);
+				// };
+
+				console.time();
+				const status = results(autoMakerId);
+				console.timeEnd();
+
+				const state = status ? 'was' : 'not';
+				const html = '<div class="well well-lg lead">'
+					+`	${autoMaker.name} <b>${state}</b> made before ${YEAR}`
+					+'</div>';
+
+				$('#content').html(html);
+			});
+	}
+
+	scenarios.push(memoize);
+
+	/* _.get vs. manual way of accessing nested object (_.set vs. _.setIn (Immutable.js))
+	 * SCENARIO: Allow user to access values that are deeply nested
+	 * CAVEAT:
+	 *  1. works best for objects with nest objects as parameters, unless array
+	 * indexes are known.
+	 *  2. Address the need to for more memory and extra operations in order to allow
+	 *  convenient usage of _.get for situations that involve arrays
+	 *
+	 * TODOs:
+	 *   1. Write logic to access cars list as-is + collections that store indexes of years
+	 *   && vehicle models (so that I have a case to use _.get).
+	 *   2. Create numbered pop-ups, along with sub counts for models searched within
+	 * */
+	const _get = function() {
 		$('nav #makers .dropdown-menu').on('click', (e) => {
-			const autoMakerId = e.target.dataset.id;
-			const autoMaker = options[autoMakerId];
-			const status = results(autoMakerId);
-			const state = status ? 'was' : 'not';
+			const place = 0;
+			const model = _.get(options , [e.target.dataset.id, 'models', place]);
+
 			const html = '<div class="well well-lg lead">'
-				+`	${autoMaker.name} <b>${state}</b> made before ${YEAR}`
+				+model ? `Position ${place} model is ${model.name}` : 'No model of that position'
 				+'</div>';
 
 			$('#content').html(html);
 		});
-	});
+	}
+
+	scenarios.push(_get);
+
+	/* _.pick vs. _.omit (similar to _.every vs. _.some
+	 * SCENARIO:
+	 *
+	 * TODOs:
+	 * */
+	const _pick = function() {
+		results = {};
+		const slogans = {
+			BMW: 'Bimmer',
+			Honda: "Ole reliable, or E. Honda from Street Fighter",
+			Hyundai: 'Just sounds generic',
+			Infinity: '...and Beyond!',
+			Kia: 'Are they even a car maker?',
+			Lamborghini: 'Vertical Doors',
+			Lincoln: 'First Name: Abraham',
+			Mini: '(Jason) Bourne Identity',
+			Mitsubishi: 'We sell TVs, too',
+			Toyota: 'Kanban'
+		};
+
+		options = _.mapValues(options, option => {
+			const slogan = slogans[option.name];
+			return slogan ? Object.assign(option, {slogan}) : option;
+		});
+
+		$('nav #makers .dropdown-menu').on('click', (e) => {
+			const makerId = e.target.dataset.id;
+			const maker = _.get(options, [makerId]);
+			results[makerId] = _.pick(maker, ['name', 'slogan', 'niceName']);
+
+			const cachedHtml = _.reduce(results, (html, choice, key) => {
+				if (choice) {
+					const { name, niceName, slogan } = choice;
+					html += `<li class="list-group-item"><b>${name} : ${slogan || niceName}</b></li>`;
+				}
+
+				return html;
+			}, '');
+
+			$('#chapters').html('<ul class="list-group">' +cachedHtml +'</ul>');
+		});
+	};
+
+	scenarios.push(_pick);
 })();
-
-
-/* _.get vs. manual way of accessing nested object (_.set vs. _.setIn (Immutable.js))
- * SCENARIO: Allow user to access values that are deeply nested
- * CAVEAT:
- *  1. works best for objects with nest objects as parameters, unless array
- * indexes are known.
- *  2. Address the need to for more memory and extra operations in order to allow
- *  convenient usage of _.get for situations that involve arrays
- *
- * TODOs:
- *   1. Write logic to access cars list as-is + collections that store indexes of years
- *   && vehicle models (so that I have a case to use _.get).
- *   2. Create numbered pop-ups, along with sub counts for models searched within
- * */
-
-/* _.pick vs. _.omit (similar to _.every vs. _.some
- * SCENARIO:
- *
- * TODOs:
- * */
-
 
 /* _.filter vs. _.reduce
  * SCENARIO:
@@ -176,4 +249,3 @@ import autoMakers from './cars';
 // _.every || _.some vs. _.find
 // _.groupBy vs. YOUR way of doing it
 // _.includes vs. STRING.includes || [array].includes
-

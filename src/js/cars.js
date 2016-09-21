@@ -3,7 +3,7 @@
  */
 'use strict';
 
-export default [{
+var autoMakers = [{
   "id": 200002038,
   "name": "Acura",
   "niceName": "acura",
@@ -3796,7 +3796,7 @@ export default [{
 }, {
   "id": 200010382,
   "name": "Volvo",
-  "niceName": "volvo",
+  "niceName": "Volvo",
   "models": [{
     "id": "Volvo_S60",
     "name": "S60",
@@ -3871,7 +3871,7 @@ export default [{
 }, {
   "id": 200038885,
   "name": "smart",
-  "niceName": "smart",
+  "niceName": "smart-ass",
   "models": [{
     "id": "smart_fortwo",
     "name": "fortwo",
@@ -3880,15 +3880,29 @@ export default [{
       "id": 200705423,
       "year": 2016,
       "states": ["USED", "NEW"]
-    }, {
-			"id": 200705424,
-			"year": 2015,
-			"states": ["USED", "NEW"]
-		}, {
-			"id": 200705425,
-			"year": 2014,
-			"states": ["USED", "NEW"]
-		}],
+    }],
     "states": ["NEW", "USED", "FUTURE"]
   }]
-}]
+}];
+
+autoMakers.map(maker => {
+	var models = maker.models.map(model => {
+		const countdown = 1000;
+		let beg = 0;
+		let years = [];
+		let oldestYear = _.last(model.years);
+
+		while (beg < countdown) {
+			oldestYear = Object.assign(oldestYear, {year: oldestYear.year - 1});
+			years.push(oldestYear);
+			beg++;
+		}
+
+		return _.set(model, ['years'], years);
+	});
+
+	maker.models = models;
+	return maker;
+});
+
+export default autoMakers;
