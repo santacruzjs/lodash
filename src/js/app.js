@@ -8,62 +8,104 @@ import _ from 'lodash';
 import autoMakers from './cars';
 
 (function() {
-	var choices = {}, results = {}, options = {}, scenarios = [];
+	var choices = {}, results = {}, options = {};
+	var scenarios = [{
+		name: '_.merge vs. Object.assign',
+		fn: null
+	}, {
+		name: '_.mapValues vs. For-in',
+		fn: null
+	}, {
+		name: '_.find vs. _.filter',
+		fn: null
+	}, {
+		name: '_.memoize vs. object caching',
+		fn: null
+	}, {
+		name: '_.get vs Crazy Traversal',
+		fn: null
+	}, {
+		name: '_.pick vs. direct callout',
+		fn: null
+	}];
 
-	const filters = {
-		makers: {
-			'bmw': "BMW",
-			'honda': 'Honda',
-			'toyota': 'Toyota',
-			'mercedes': 'Mercedes Benz'
-		},
-		engineSize: {},
-		color: {},
-		type: {}
+	const slogans = {
+		BMW: 'Bimmer',
+		Honda: "Ole reliable, or E. Honda from Street Fighter",
+		Hyundai: 'Just sounds generic',
+		Infinity: '...and Beyond!',
+		Kia: 'Are they even a car maker?',
+		Lamborghini: 'Vertical Doors',
+		Lincoln: 'First Name: Abraham',
+		Mini: '(Jason) Bourne Identity',
+		Mitsubishi: 'We sell TVs, too',
+		Toyota: 'Kanban'
 	};
 
 // Build baseline navigation menu w/ Drop down of scenarios to run
 	$(document).ready(function() {
-		// scenarios.forEach(scenario => scenario());
-		scenarios[0]();
-		// scenario[1]();
-		// scenarios[2]();
-		scenarios[4]();
+		scenarios.forEach((scenario, index) => {
+			const html =
+				'<li>'
+				+ `<a href="#" data-id=${index}>${scenario.name}</a>`
+				+'</li>';
+
+			$('nav #scenarios .dropdown-menu').append(html);
+		});
+
+		$('nav #scenarios .dropdown-menu').on('click', (e) => {
+			const index = e.target.dataset.id;
+			const scenario = scenarios[index];
+			scenario.fn();
+			$('nav #title').html(`(${index}) : ${scenario.name}`);
+		});
 	});
 
-
-	/* _.mapValues vs. _.each vs. [array].forEach
+	/* [0] _.merge vs. Object.assign
 	 * SCENARIO:
 	 * 	1. Create list of selected makes, and the makes available
 	 * 	2. Build a drop-down menu of vehicle makes
 	 */
-	scenarios.push(function() {
-		// mapValues
-		options = _.mapKeys(autoMakers, (maker) => maker.id);
+	scenarios[0].fn = function() {
+		let optionsWithKeys = _.mapKeys(autoMakers, (maker) => maker.id);
+		options = _.mapValues(optionsWithKeys, option => {
+			const slogan = slogans[option.name];
+			return slogan ? Object.assign(option, {slogan}) : option;
+		});
+	};
+
+	/* [1] _.mapValues vs. _.each vs. [array].forEach
+	 * SCENARIO:
+	 * 	1. Create list of selected makes, and the makes available
+	 * 	2. Build a drop-down menu of vehicle makes
+	 */
+	scenarios[1].fn = function() {
 		results = _.mapValues(options, (maker) => false);
 
 		// for-in
-		autoMakers.forEach(maker => options[maker.id] = maker);
-		for (const id in options) {
-			results[id] = false;
-		}
-
+		// autoMakers.forEach(maker => options[maker.id] = maker);
+		// for (const id in options) {
+		// 	results[id] = false;
+		// }
 
 		_.each(options, maker => {
-			$('#app .dropdown-menu').append(
-				`<li><a href="#" data-id=${maker.id}>${maker.name}</a></li>`
+			let { slogan } = maker;
+			$('nav #makers .dropdown-menu').append(
+				'<li>'
+				+	`<a href="#" data-id=${maker.id}>${slogan ? '*' : ''} ${maker.name}</a>`
+				+'</li>'
 			);
 		});
-	});
+	};
 
-	/* _.find vs. [array].find vs. _.filter
+	/* [2] _.find vs. [array].find vs. _.filter
 	 * SCENARIO: Find vehicle brand within cars list after use has made a selection
 	 *
 	 * TODOs:
 	 *  	1. Run utility to find the match within origin cars list
 	 *   2. Add pop-ups that show all iterations being performed before result is found.
 	 * */
-	const findFilter = function() {
+	scenarios[2].fn = function() {
 		$('nav #makers .dropdown-menu').on('click', (e) => {
 			let content = '';
 			const targetId = parseInt(e.target.dataset.id);
@@ -94,16 +136,14 @@ import autoMakers from './cars';
 		});
 	};
 
-	scenarios.push(findFilter);
-
-	/* _.memoize vs. {object} key-value pair caching
+	/* [3] _.memoize vs. {object} key-value pair caching
 	 * SCENARIO: Allow user to see whether a maker has a model in a particular year
 	 *
 	 * TODOs:
 	 *   1. Add 'year' entry to last car maker index
 	 *   2. Create numbered pop-ups, along with sub counts for models searched within
 	 * */
-	const memoize = function() {
+	scenarios[3].fn = function() {
 		const YEAR = 2016 - 1000;
 		// const inputTemplate = {id: '', year: 2014};
 
@@ -156,11 +196,9 @@ import autoMakers from './cars';
 
 				$('#content').html(html);
 			});
-	}
+	};
 
-	scenarios.push(memoize);
-
-	/* _.get vs. manual way of accessing nested object (_.set vs. _.setIn (Immutable.js))
+	/* [4] _.get vs. manual way of accessing nested object (_.set vs. _.setIn (Immutable.js))
 	 * SCENARIO: Allow user to access values that are deeply nested
 	 * CAVEAT:
 	 *  1. works best for objects with nest objects as parameters, unless array
@@ -173,7 +211,7 @@ import autoMakers from './cars';
 	 *   && vehicle models (so that I have a case to use _.get).
 	 *   2. Create numbered pop-ups, along with sub counts for models searched within
 	 * */
-	const _get = function() {
+	scenarios[4].fn = function() {
 		$('nav #makers .dropdown-menu').on('click', (e) => {
 			const place = 0;
 			const model = _.get(options , [e.target.dataset.id, 'models', place]);
@@ -184,34 +222,15 @@ import autoMakers from './cars';
 
 			$('#content').html(html);
 		});
-	}
+	};
 
-	scenarios.push(_get);
-
-	/* _.pick vs. _.omit (similar to _.every vs. _.some
+	/* [5] _.pick vs. _.omit (similar to _.every vs. _.some
 	 * SCENARIO:
 	 *
 	 * TODOs:
 	 * */
-	const _pick = function() {
+	scenarios[5].fn = function() {
 		results = {};
-		const slogans = {
-			BMW: 'Bimmer',
-			Honda: "Ole reliable, or E. Honda from Street Fighter",
-			Hyundai: 'Just sounds generic',
-			Infinity: '...and Beyond!',
-			Kia: 'Are they even a car maker?',
-			Lamborghini: 'Vertical Doors',
-			Lincoln: 'First Name: Abraham',
-			Mini: '(Jason) Bourne Identity',
-			Mitsubishi: 'We sell TVs, too',
-			Toyota: 'Kanban'
-		};
-
-		options = _.mapValues(options, option => {
-			const slogan = slogans[option.name];
-			return slogan ? Object.assign(option, {slogan}) : option;
-		});
 
 		$('nav #makers .dropdown-menu').on('click', (e) => {
 			const makerId = e.target.dataset.id;
@@ -230,8 +249,6 @@ import autoMakers from './cars';
 			$('#chapters').html('<ul class="list-group">' +cachedHtml +'</ul>');
 		});
 	};
-
-	scenarios.push(_pick);
 })();
 
 /* _.filter vs. _.reduce
@@ -240,7 +257,6 @@ import autoMakers from './cars';
  * TODOs:
  * */
 
-// _.merge vs. Object.assign
 // _.reduce vs. {object}.reduce vs. _.each vs. [array].forEach vs. _.map
 // _.pluck vs. _.filter
 
